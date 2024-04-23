@@ -1,0 +1,7 @@
+pandas~=2.2.2
+pyqtgraph~=0.13.4
+numpy~=1.26.4
+PyQt5~=5.15.10
+PySide2~=5.13.2
+matplotlib~=3.8.4
+pyserial~=3.5
