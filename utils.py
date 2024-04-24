@@ -25,30 +25,14 @@ def generate_positive_values():
         "ecg": np.random.randint(0, 100),
         "gsr": np.random.randint(0, 100),
     }
-    # print("Generated data1:", data1)  # Проверка для отладки
 
-    data2 = {
-        "eeg": np.random.randint(0, 100),
-        "emg": np.random.randint(0, 100),
-        "ecg": np.random.randint(0, 100),
-        "gsr": np.random.randint(0, 100),
-    }
-    # print("Generated data2:", data2)  # Проверка для отладки
+    return data1, data1, data1, data1
 
-    data3 = {
-        "eeg": np.random.randint(0, 100),
-        "emg": np.random.randint(0, 100),
-        "ecg": np.random.randint(0, 100),
-        "gsr": np.random.randint(0, 100),
-    }
 
-    data4 = {
-        "eeg": np.random.randint(0, 100),
-        "emg": np.random.randint(0, 100),
-        "ecg": np.random.randint(0, 100),
-        "gsr": np.random.randint(0, 100),
-    }
-    # print("Generated data3:", data3)  # Проверка для отладки
+import random
+import json
 
-    return data1, data2, data3, data4
 
+def generate_temperature_signal():
+    temperature = random.uniform(10, 30)  # Генерируем случайное значение температуры от 10 до 30
+    return temperature
