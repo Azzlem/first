@@ -1,44 +1,9 @@
 import sys
-import asyncio
-from random import randint
-
-import websockets
-from PyQt6 import QtCore, QtWidgets
+from PyQt6 import QtWidgets
 import pyqtgraph as pg
 
-
-class WebSocketClientThread(QtCore.QThread):
-    """
-    Separate thread for handling WebSocket communication with the server.
-    Emits a signal with the received temperature data.
-    """
-    temperature_received = QtCore.pyqtSignal(float, str)
-
-    def run(self):
-        asyncio.run(self._run_async())  # Run the coroutine in the thread
-
-    async def _run_async(self):
-        async with websockets.connect("ws://localhost:8000") as websocket:
-            # Send "Я готов" message
-            await websocket.send("Я готов")
-
-            while True:
-                try:
-                    # Receive messages from the server
-                    reply = await websocket.recv()
-                    if reply or reply != -1:
-                        # Simulate receiving temperature data
-
-                        sens_to_send = int(reply.split(",")[0])
-                        sens_name = reply.split(",")[1]
-                        self.temperature_received.emit(sens_to_send, sens_name)
-                        print(sens_name, sens_to_send)
-                    else:
-                        print(reply)
-                        print(f"Unexpected message: {reply} ({type(reply)})")
-                except websockets.ConnectionClosed:
-                    print("WebSocket connection closed.")
-                    break
+from plots import make_plot_temp, make_plot_water, make_plot_power, make_plot_soul
+from websocket_c_t import WebSocketClientThread
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -48,88 +13,52 @@ class MainWindow(QtWidgets.QMainWindow):
         # Create and start WebSocket client thread
         self.websocket_client_thread = WebSocketClientThread()
         self.websocket_client_thread.temperature_received.connect(self.update_plots)
+        self.websocket_client_thread.connection_failed.connect(self.handle_connection_failed)
         self.websocket_client_thread.start()  # Start the thread
 
         # Layout for plots
-        layout = QtWidgets.QVBoxLayout()
+        self.layout = QtWidgets.QVBoxLayout()
 
-        # Create four plots
+        # button
+        self.temp_button = QtWidgets.QPushButton('Temperature')
+        self.power_button = QtWidgets.QPushButton('Power')
+        self.soul_button = QtWidgets.QPushButton('Soul')
+        self.water_button = QtWidgets.QPushButton('Water')
+
+        self.buttons = []
+        self.buttons.append(self.temp_button)
+        self.buttons.append(self.power_button)
+        self.buttons.append(self.soul_button)
+        self.buttons.append(self.water_button)
+
+        self.buttons_layout = QtWidgets.QHBoxLayout()
+        self.buttons_layout.addWidget(self.temp_button)
+        self.buttons_layout.addWidget(self.power_button)
+        self.buttons_layout.addWidget(self.soul_button)
+        self.buttons_layout.addWidget(self.water_button)
+
+        self.layout.addLayout(self.buttons_layout)
+
+        self.temp_button.clicked.connect(
+            lambda: self.plot_widget_temp.hide() if self.plot_widget_temp.isVisible() else self.plot_widget_temp.show())
+        self.water_button.clicked.connect(
+            lambda: self.plot_widget_water.hide() if self.plot_widget_water.isVisible() else self.plot_widget_water.show())
+        self.power_button.clicked.connect(
+            lambda: self.plot_widget_power.hide() if self.plot_widget_power.isVisible() else self.plot_widget_power.show())
+        self.soul_button.clicked.connect(
+            lambda: self.plot_widget_soul.hide() if self.plot_widget_soul.isVisible() else self.plot_widget_soul.show())
+
+        # Создание списка графиков
         self.plot_widgets = []
-        # for _ in range(4):
-        #     plot_widget = pg.PlotWidget()
-        #     plot_widget.setBackground("w")
-        #     pen = pg.mkPen(color=(255, 0, 0))
-        #     plot_widget.setTitle("Temperature vs Time", color="b", size="20pt")
-        #     styles = {"color": "red", "font-size": "18px"}
-        #     plot_widget.setLabel("left", "Temperature (°C)", **styles)
-        #     plot_widget.setLabel("bottom", "Time (sec)", **styles)
-        #     plot_widget.addLegend()
-        #     plot_widget.showGrid(x=True, y=True)
-        #     plot_widget.setYRange(20, 40)
-        #     self.plot_widgets.append(plot_widget)
-        #     layout.addWidget(plot_widget)
+        # создание графиков
+        self.plot_widget_temp = make_plot_temp(self)
+        self.plot_widget_power = make_plot_power(self)
+        self.plot_widget_water = make_plot_water(self)
+        self.plot_widget_soul = make_plot_soul(self)
 
-        plot_widget_temp = pg.PlotWidget()
-        plot_widget_temp.setBackground("w")
-        pen = pg.mkPen(color=(255, 0, 0))
-        plot_widget_temp.setTitle("Temperature", color="b", size="20pt")
-        styles = {"color": "black", "font-size": "18px"}
-        plot_widget_temp.setLabel("left", "Temperature (°C)", **styles)
-        plot_widget_temp.setLabel("bottom", "Time (sec)", **styles)
-
-        plot_widget_temp.addLegend()
-        plot_widget_temp.showGrid(x=True, y=True)
-        plot_widget_temp.setYRange(20, 40)
-        self.plot_widgets.append(plot_widget_temp)
-        layout.addWidget(plot_widget_temp)
-
-        plot_widget_power = pg.PlotWidget()
-        plot_widget_power.setBackground("b")
-        pen = pg.mkPen(color=(255, 0, 0))
-        plot_widget_power.setTitle("Power", color="w", size="20pt")
-        styles = {"color": "black", "font-size": "18px"}
-        plot_widget_power.setLabel("left", "Power (H)", **styles)
-        plot_widget_power.setLabel("bottom", "Time (sec)", **styles)
-        plot_widget_power.addLegend()
-        plot_widget_power.showGrid(x=True, y=True)
-        plot_widget_power.setYRange(20, 40)
-        self.plot_widgets.append(plot_widget_power)
-        layout.addWidget(plot_widget_power)
-
-        plot_widget_water = pg.PlotWidget()
-        plot_widget_water.setBackground("y")
-        pen = pg.mkPen(color=(255, 0, 0))
-        plot_widget_water.setTitle("Water", color="g", size="20pt")
-        styles = {"color": "black", "font-size": "18px"}
-        plot_widget_water.setLabel("left", "Water (L)", **styles)
-        plot_widget_water.setLabel("bottom", "Time (sec)", **styles)
-        plot_widget_water.addLegend()
-        plot_widget_water.showGrid(x=True, y=True)
-        plot_widget_water.setYRange(20, 40)
-        self.plot_widgets.append(plot_widget_water)
-        layout.addWidget(plot_widget_water)
-
-        plot_widget_soul = pg.PlotWidget()
-        plot_widget_soul.setBackground("r")
-        pen = pg.mkPen(color=(255, 0, 0))
-        plot_widget_soul.setTitle("Soul", color="b", size="20pt")
-        styles = {"color": "black", "font-size": "18px"}
-        plot_widget_soul.setLabel("left", "Soul (шт)", **styles)
-        plot_widget_soul.setLabel("bottom", "Time (sec)", **styles)
-        plot_widget_soul.addLegend()
-        plot_widget_soul.showGrid(x=True, y=True)
-        plot_widget_soul.setYRange(20, 40)
-        self.plot_widgets.append(plot_widget_soul)
-        layout.addWidget(plot_widget_soul)
-
-        central_widget = QtWidgets.QWidget()
-        central_widget.setLayout(layout)
-        self.setCentralWidget(central_widget)
-
-        # Initialize data for plots
-        # self.times = [[] for _ in range(4)]
-        # self.temperatures = [[] for _ in range(4)]
-        # self.lines = [None] * 4
+        self.central_widget = QtWidgets.QWidget()
+        self.central_widget.setLayout(self.layout)
+        self.setCentralWidget(self.central_widget)
 
         self.times_1 = []
         self.times_2 = []
@@ -146,7 +75,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.lines_3 = []
         self.lines_4 = []
 
+    def handle_connection_failed(self):
+        self.setWindowTitle("Прибор не подключен")
+
     def update_plots(self, sens_to_send, sens_name):
+        self.setWindowTitle("Прибор подключен")
         max_points = 100
         if len(self.times_1) > max_points:
             self.times_1 = self.times_1[-max_points:]
@@ -160,8 +93,6 @@ class MainWindow(QtWidgets.QMainWindow):
         if len(self.times_4) > max_points:
             self.times_4 = self.times_4[-max_points:]
             self.temperatures_4 = self.temperatures_4[-max_points:]
-
-
 
         if sens_name == "temp":
             self.times_1.append(self.times_1[-1] + 1 if self.times_1 else 1)
@@ -180,8 +111,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 )
                 self.plot_widgets[0].setYRange(0, 10)
                 self.plot_widgets[0].setXRange(0, 100)
-                # self.plot_widgets[0].enableAutoRange(pg.ViewBox.XAxis, enable=True)
-                # self.plot_widgets[0].enableAutoRange(axis='x')
+
 
             else:
                 self.lines_1.setData(self.times_1, self.temperatures_1)
@@ -252,8 +182,10 @@ class MainWindow(QtWidgets.QMainWindow):
         """
         Stop the WebSocket client thread gracefully when the window is closed.
         """
+        print("Close event triggered")
         self.websocket_client_thread.quit()  # Signal the thread to stop
         self.websocket_client_thread.wait()  # Wait for the thread to finish
+        print("а сюда")
         super().closeEvent(event)
 
 
