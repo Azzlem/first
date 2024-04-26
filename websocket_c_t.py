@@ -3,10 +3,6 @@ import websockets
 from PyQt6 import QtCore, QtWidgets
 
 
-
-
-
-
 class WebSocketClientThread(QtCore.QThread):
     """
     Separate thread for handling WebSocket communication with the server.
