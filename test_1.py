@@ -1,6 +1,7 @@
 import sys
 from PyQt6 import QtWidgets
 import pyqtgraph as pg
+from PyQt6.QtCore import QSize
 
 from plots import make_plot_temp, make_plot_water, make_plot_power, make_plot_soul
 from websocket_c_t import WebSocketClientThread
@@ -39,15 +40,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.layout.addLayout(self.buttons_layout)
 
-        self.temp_button.clicked.connect(
-            lambda: self.plot_widget_temp.hide() if self.plot_widget_temp.isVisible() else self.plot_widget_temp.show())
-        self.water_button.clicked.connect(
-            lambda: self.plot_widget_water.hide() if self.plot_widget_water.isVisible() else self.plot_widget_water.show())
-        self.power_button.clicked.connect(
-            lambda: self.plot_widget_power.hide() if self.plot_widget_power.isVisible() else self.plot_widget_power.show())
-        self.soul_button.clicked.connect(
-            lambda: self.plot_widget_soul.hide() if self.plot_widget_soul.isVisible() else self.plot_widget_soul.show())
-
         # Создание списка графиков
         self.plot_widgets = []
         # создание графиков
@@ -74,6 +66,30 @@ class MainWindow(QtWidgets.QMainWindow):
         self.lines_2 = []
         self.lines_3 = []
         self.lines_4 = []
+
+        self.count = 4
+
+        self.connect_button(self.temp_button, self.plot_widgets[0])
+        self.connect_button(self.power_button, self.plot_widgets[1])
+        self.connect_button(self.water_button, self.plot_widgets[2])
+        self.connect_button(self.soul_button, self.plot_widgets[3])
+
+    def toggle_plot_visibility(self, plot_widget):
+        if plot_widget.isVisible():
+            plot_widget.hide()
+            self.count -= 1
+
+        else:
+            plot_widget.show()
+            self.count += 1
+            a = self.layout.geometry()
+            asd = round(a.width() / self.count)
+            print(a.width())
+            print(asd)
+            plot_widget.setMinimumSize(QSize(asd, 300))
+
+    def connect_button(self, button, plot_widget):
+        button.clicked.connect(lambda: self.toggle_plot_visibility(plot_widget))
 
     def handle_connection_failed(self):
         self.setWindowTitle("Прибор не подключен")
@@ -183,8 +199,7 @@ class MainWindow(QtWidgets.QMainWindow):
         Stop the WebSocket client thread gracefully when the window is closed.
         """
         print("Close event triggered")
-        self.websocket_client_thread.quit()  # Signal the thread to stop
-        self.websocket_client_thread.wait()  # Wait for the thread to finish
+        self.websocket_client_thread.exit(0)
         print("а сюда")
         super().closeEvent(event)
 

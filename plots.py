@@ -1,4 +1,5 @@
 import pyqtgraph as pg
+from PyQt6.QtCore import QSize
 
 styles = {"color": "black", "font-size": "18px"}
 
@@ -12,9 +13,9 @@ def make_plot_temp(self):
     self.plot_widget_temp.addLegend()
     self.plot_widget_temp.showGrid(x=True, y=True)
     self.plot_widget_temp.setYRange(20, 40)
-    # self.plot_widget_temp.setFixedSize(300, 200)  # Set fixed size
+    # self.plot_widget_temp.setMinimumSize(QSize())
     self.plot_widgets.append(self.plot_widget_temp)
-    self.layout_right_down.addWidget(self.plot_widget_temp)
+    self.layout.addWidget(self.plot_widget_temp)
     return self.plot_widget_temp
 
 
@@ -29,7 +30,7 @@ def make_plot_water(self):
     self.plot_widget_water.setYRange(20, 40)
     # self.plot_widget_water.setFixedSize(300, 200)  # Set fixed size
     self.plot_widgets.append(self.plot_widget_water)
-    self.layout_right_down.addWidget(self.plot_widget_water)
+    self.layout.addWidget(self.plot_widget_water)
     return self.plot_widget_water
 
 
@@ -44,7 +45,7 @@ def make_plot_power(self):
     self.plot_widget_power.setYRange(20, 40)
     # self.plot_widget_power.setFixedSize(300, 200)  # Set fixed size
     self.plot_widgets.append(self.plot_widget_power)
-    self.layout_right_down.addWidget(self.plot_widget_power)
+    self.layout.addWidget(self.plot_widget_power)
     return self.plot_widget_power
 
 
@@ -59,5 +60,5 @@ def make_plot_soul(self):
     self.plot_widget_soul.setYRange(20, 40)
     # self.plot_widget_soul.setFixedSize(300, 200)  # Set fixed size
     self.plot_widgets.append(self.plot_widget_soul)
-    self.layout_right_down.addWidget(self.plot_widget_soul)
+    self.layout.addWidget(self.plot_widget_soul)
     return self.plot_widget_soul
