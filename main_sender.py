@@ -6,14 +6,19 @@ import websockets
 
 async def send_periodic_message(websocket):
     while True:
-        await asyncio.sleep(0.05)
+        await asyncio.sleep(0.25)
         temp = random.randint(1, 10)
         power = random.randint(1, 10)
         water = random.randint(1, 10)
         soul = random.randint(1, 10)
-        list_sensors = [temp, power, water, soul]
+        hr = random.randint(1, 10)
+        spo = random.randint(1, 10)
+        red = random.randint(1, 10)
+        ir = random.randint(1, 10)
+
+        list_sensors = [temp, power, water, soul, hr, spo, red, ir]
         sensor_to_send = random.choice(list_sensors)
-        name_sensor_list = ['temp', 'power', 'water', 'soul']
+        name_sensor_list = ['temp', 'power', 'water', 'soul', 'hr', 'spo', 'red', 'ir']
         name_sensor = random.choice(name_sensor_list)
 
         await websocket.send(f'{sensor_to_send},{name_sensor}')
